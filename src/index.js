@@ -87,9 +87,16 @@ class ReleaserCommand extends Command {
   }
 }
 
-ReleaserCommand.description = `Describe the command here
-...
-Extra documentation goes here
+ReleaserCommand.description = `
+Releaser can be used to perform all git-oriented work related to releasing software.
+The following steps are performed in specified order:
+1. Checkout on previous release branch
+2. Create new release branch
+3. Cherry-pick specified commits
+4. Change version in Maven POMs
+5. Create release commit
+6. Create release tag
+7. Push branch to remote
 `
 
 ReleaserCommand.flags = {
