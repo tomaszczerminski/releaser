@@ -1,12 +1,14 @@
 {
-  "name": "releaser",
+  "name": "@tomekztorunia/releaser",
   "description": "Tool for releasing corporate software",
   "version": "0.1.0",
   "author": "Tomasz Czermiński",
   "bin": {
-    "releaser": "./bin/run"
+    "releaser": "bin/run"
   },
-  "bugs": "https://github.com/tomaszczerminski/releaser/issues",
+  "bugs": {
+    "url": "https://github.com/tomaszczerminski/releaser/issues"
+  },
   "dependencies": {
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
@@ -40,11 +42,17 @@
   "oclif": {
     "bin": "releaser"
   },
-  "repository": "tomaszczerminski/releaser",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomaszczerminski/releaser.git"
+  },
   "scripts": {
     "posttest": "eslint .",
     "prepack": "oclif-dev readme",
     "test": "nyc mocha --forbid-only \"test/**/*.test.js\"",
     "version": "oclif-dev readme && git add README.md"
+  },
+  "directories": {
+    "test": "test"
   }
 }

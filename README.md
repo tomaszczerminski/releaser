@@ -10,23 +10,18 @@ Tool for releasing corporate software
 
 <!-- toc -->
 * [Usage](#usage)
-* [Commands](#commands)
 <!-- tocstop -->
 # Usage
 <!-- usage -->
 ```sh-session
-$ npm install -g releaser
+$ npm install -g @tomekztorunia/releaser
 $ releaser COMMAND
 running command...
 $ releaser (-v|--version|version)
-releaser/0.1.0 win32-x64 node-v14.15.1
+@tomekztorunia/releaser/0.1.0 win32-x64 node-v14.15.1
 $ releaser --help [COMMAND]
 USAGE
   $ releaser COMMAND
 ...
 ```
 <!-- usagestop -->
-# Commands
-<!-- commands -->
-
-<!-- commandsstop -->

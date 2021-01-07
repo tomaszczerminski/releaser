@@ -1,14 +1,16 @@
 const {Command, flags} = require('@oclif/command')
 const {cli} = require('cli-ux')
-const {exec} = require('child_process')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 const replace = require('replace-in-file')
+const fs = require('fs')
 
 const checkoutPreviousReleaseBranch = async previous => {
-  console.log(`Checkout on previous release branch: release/${previous}`)
-  const {error} = await exec(`git checkout release/${previous}`)
-  if (error) {
-    throw new Error(`error: ${error.message}`)
-  }
+  const cmd = `git checkout release/${previous}`
+  console.log(`checkout on previous release branch -> ${cmd}`)
+  const {stdout, stderr} = await exec(cmd)
+  console.log(stdout)
+  console.log(stderr)
 }
 
 const changeVersionInPoms = async (previous, current) => {
@@ -22,19 +24,19 @@ const changeVersionInPoms = async (previous, current) => {
 }
 
 const createReleaseCommit = async version => {
-  console.log('Creating release commit (changed version in POMs)')
-  const {error} = await exec(`git commit -m "Release ${version}"`)
-  if (error) {
-    throw new Error(`error: ${error.message}`)
-  }
+  const cmd = `git commit -m "Release ${version}"`
+  console.log(`creating release commit -> ${cmd}`)
+  const {stdout, stderr} = await exec(cmd)
+  console.log(stdout)
+  console.log(stderr)
 }
 
 const createBranch = async version => {
-  console.log(`Creating release branch: release/${version}`)
-  const {error} = await exec(`git checkout -b release/${version}`)
-  if (error) {
-    throw new Error(`error: ${error.message}`)
-  }
+  const cmd = `git checkout -b release/${version}`
+  console.log(`creating release branch -> ${cmd}`)
+  const {stdout, stderr} = await exec(cmd)
+  console.log(stdout)
+  console.log(stderr)
 }
 
 const cherryPick = async () => {
@@ -42,30 +44,36 @@ const cherryPick = async () => {
   if (!commits) {
     throw new Error('you must specify commits that need to be included in release')
   }
-  console.log(`Cherry-picking specified commits: git cherry-pick ${commits}`)
-  const {error} = await exec(`git cherry-pick ${commits}`)
-  if (error) {
-    throw new Error(`error: ${error.message}`)
-  }
+  const cmd = `git cherry-pick ${commits}`
+  console.log(`cherry-picking specified commits -> ${cmd}`)
+  const {stdout, stderr} = await exec(cmd)
+  console.log(stdout)
+  console.log(stderr)
 }
 
 const createTag = async version => {
-  console.log(`Creating release tag: v${version}`)
-  const {error} = await exec(`git tag v${version}`)
-  if (error) {
-    throw new Error(`error: ${error.message}`)
-  }
+  const cmd = `git tag v${version}`
+  console.log(`creating release tag -> ${cmd}`)
+  const {stdout, stderr} = await exec(cmd)
+  console.log(stdout)
+  console.log(stderr)
 }
 
 const pushBranch = async version => {
-  const {error} = await exec(`git push origin release/${version}`)
-  if (error) {
-    throw new Error(`error: ${error.message}`)
-  }
+  const cmd = `git push --tags origin release/${version}`
+  console.log(`pushing branch to remote -> ${cmd}`)
+  const {stdout, stderr} = await exec(cmd)
+  console.log(stdout)
+  console.log(stderr)
 }
 
 class ReleaserCommand extends Command {
   async run() {
+    const isRepository = fs.existsSync('.git')
+    if (!isRepository) {
+      this.log('you can use releaser only from room of git repository')
+      return
+    }
     const previous = await cli.prompt('Enter previous release version')
     if (!previous) {
       this.log('you must specify previous release version')
@@ -83,7 +91,10 @@ class ReleaserCommand extends Command {
       .then(_ => createReleaseCommit(version))
       .then(_ => createTag(version))
       .then(_ => pushBranch(version))
-      .catch(error => console.log(error))
+      .catch(error => {
+        console.log(error.stderr)
+        console.log('you must now continue manually...')
+      })
   }
 }
 
