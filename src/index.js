@@ -27,12 +27,37 @@ const changeVersionInPoms = async current => {
     from: previous,
     to: current,
   }
-  const results = await replace(options)
-  console.log('Replacement results:', results)
+  await replace(options)
+  const cmd = 'for /f "delims=" %G in (\'dir /b/s pom.xml\') do ECHO.%G% | FIND /I "target">Nul || (@git add %G)'
+  console.log(`adding modified POMs -> ${cmd}`)
+  const {stdout, stderr} = await exec(cmd)
+  console.log(stdout)
+  console.log(stderr)
+}
+
+const changeVersionInNpm = async current => {
+  const shouldReplace = await cli.prompt('Do you want to replace version in package.json? (Y/N)')
+  if (shouldReplace === 'N' || shouldReplace === 'n') {
+    console.log('version in package.json is not going to be replaced!')
+    return Promise.resolve()
+  }
+  const previous = await cli.prompt('Enter release version that needs to be replaced:')
+  console.log('changing version in package.json...')
+  const options = {
+    files: './**/package.json',
+    from: previous,
+    to: current,
+  }
+  await replace(options)
+  const cmd = 'for /f "delims=" %G in (\'dir /b/s package.json\') do ECHO.%G% | FIND /I "node_modules">Nul || (@git add %G)'
+  console.log(`adding modified package.json -> ${cmd}`)
+  const {stdout, stderr} = await exec(cmd)
+  console.log(stdout)
+  console.log(stderr)
 }
 
 const createReleaseCommit = async version => {
-  const cmd = `git add **/pom.xml pom.xml && git commit -m "Release ${version}"`
+  const cmd = `git commit -m "Release ${version}"`
   console.log(`creating release commit -> ${cmd}`)
   const {stdout, stderr} = await exec(cmd)
   console.log(stdout)
@@ -96,6 +121,7 @@ class ReleaserCommand extends Command {
       .then(_ => createBranch(version))
       .then(_ => cherryPick())
       .then(_ => changeVersionInPoms(version))
+      .then(_ => changeVersionInNpm(version))
       .then(_ => createReleaseCommit(version))
       .then(_ => createTag(version))
       .then(_ => pushBranch(version))
