@@ -1,7 +1,7 @@
 {
   "name": "@tomekztorunia/releaser",
   "description": "Tool for releasing corporate software",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "Tomasz Czermiński",
   "bin": {
     "releaser": "bin/run"
