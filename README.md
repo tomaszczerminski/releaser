@@ -18,7 +18,7 @@ $ npm install -g @tomekztorunia/releaser
 $ releaser COMMAND
 running command...
 $ releaser (-v|--version|version)
-@tomekztorunia/releaser/0.1.0 win32-x64 node-v14.15.1
+@tomekztorunia/releaser/0.2.0 win32-x64 node-v14.15.1
 $ releaser --help [COMMAND]
 USAGE
   $ releaser COMMAND

@@ -5,15 +5,23 @@ const exec = util.promisify(require('child_process').exec)
 const replace = require('replace-in-file')
 const fs = require('fs')
 
-const checkoutPreviousReleaseBranch = async previous => {
-  const cmd = `git checkout release/${previous}`
+const checkoutBranch = async () => {
+  const branch = await cli.prompt('Enter branch from which you want to create a release')
+  const cmd = `git checkout ${branch}`
   console.log(`checkout on previous release branch -> ${cmd}`)
   const {stdout, stderr} = await exec(cmd)
   console.log(stdout)
   console.log(stderr)
 }
 
-const changeVersionInPoms = async (previous, current) => {
+const changeVersionInPoms = async current => {
+  const shouldReplace = await cli.prompt('Do you want to replace version in Maven POMs? (Y/N)')
+  if (shouldReplace === 'N' || shouldReplace === 'n') {
+    console.log('version in POMs is not going to be replaced!')
+    return Promise.resolve()
+  }
+  const previous = await cli.prompt('Enter release version that needs to be replaced:')
+  console.log('changing version in POMs...')
   const options = {
     files: './**/pom.xml',
     from: previous,
@@ -24,7 +32,7 @@ const changeVersionInPoms = async (previous, current) => {
 }
 
 const createReleaseCommit = async version => {
-  const cmd = `git commit -m "Release ${version}"`
+  const cmd = `git add **/pom.xml pom.xml && git commit -m "Release ${version}"`
   console.log(`creating release commit -> ${cmd}`)
   const {stdout, stderr} = await exec(cmd)
   console.log(stdout)
@@ -40,9 +48,14 @@ const createBranch = async version => {
 }
 
 const cherryPick = async () => {
+  const hasCommits = await cli.prompt('Do you want to cherry-pick any commit? (Y/N)')
+  if (hasCommits === 'N' || hasCommits === 'n') {
+    console.log('no cherry-pick will be performed!')
+    return Promise.resolve()
+  }
   const commits = await cli.prompt('Enter list of commits (separated by space)')
   if (!commits) {
-    throw new Error('you must specify commits that need to be included in release')
+    throw new Error('commit list is empty!')
   }
   const cmd = `git cherry-pick ${commits}`
   console.log(`cherry-picking specified commits -> ${cmd}`)
@@ -74,20 +87,15 @@ class ReleaserCommand extends Command {
       this.log('you can use releaser only from room of git repository')
       return
     }
-    const previous = await cli.prompt('Enter previous release version')
-    if (!previous) {
-      this.log('you must specify previous release version')
-      return
-    }
     const version = await cli.prompt('Enter release version')
     if (!version) {
       this.log('you must specify release version')
       return
     }
-    checkoutPreviousReleaseBranch(previous)
+    checkoutBranch()
       .then(_ => createBranch(version))
       .then(_ => cherryPick())
-      .then(_ => changeVersionInPoms(previous, version))
+      .then(_ => changeVersionInPoms(version))
       .then(_ => createReleaseCommit(version))
       .then(_ => createTag(version))
       .then(_ => pushBranch(version))
